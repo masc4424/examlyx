@@ -1,0 +1,66 @@
+name: CI/CD Pipeline (master branch)
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-test-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install backend dependencies
+        run: |
+          pip install -r examlyx_backend/requirements.txt
+
+      - name: Run backend tests
+        working-directory: examlyx_backend
+        run: |
+          python manage.py test
+
+  build-and-test-frontend:
+    runs-on: ubuntu-latest
+    needs: build-and-test-backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install frontend dependencies
+        working-directory: examlyx-frontend
+        run: npm install
+
+      - name: Run frontend tests
+        working-directory: examlyx-frontend
+        run: npm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test-frontend
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deployment
+        run: |
+          echo "Add deployment commands here"
+
