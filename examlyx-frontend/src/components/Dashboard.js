@@ -1,59 +1,203 @@
-import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import Home from './pages/Home';
 
 const Dashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const { user, logout } = useAuth();
+  const sidebarRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    const newCollapsedState = !sidebarCollapsed;
+    setSidebarCollapsed(newCollapsedState);
+    setSidebarHovered(false); // Reset hover state when manually toggled
+    
+    // Toggle body class for collapsed state
+    if (newCollapsedState) {
+      document.body.classList.add('layout-menu-collapsed');
+    } else {
+      document.body.classList.remove('layout-menu-collapsed');
+    }
+    
+    // Also toggle class on layout-menu element
+    const layoutMenu = document.getElementById('layout-menu');
+    if (layoutMenu) {
+      if (newCollapsedState) {
+        layoutMenu.classList.add('menu-collapsed');
+        layoutMenu.classList.remove('menu-expanded');
+      } else {
+        layoutMenu.classList.remove('menu-collapsed');
+        layoutMenu.classList.add('menu-expanded');
+      }
+    }
   };
 
-  return (
-    <div className={`layout-wrapper layout-content-navbar ${sidebarCollapsed ? 'layout-menu-collapsed' : ''}`}>
-      <div className="layout-container">
-        <Sidebar collapsed={sidebarCollapsed} />
+  const handleSidebarHover = (isHovering) => {
+    if (sidebarCollapsed) {
+      if (isHovering) {
+        // Clear any existing timeout
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+        }
         
+        // Show sidebar on hover
+        setSidebarHovered(true);
+        const layoutMenu = document.getElementById('layout-menu');
+        if (layoutMenu) {
+          layoutMenu.classList.add('menu-hover');
+          layoutMenu.classList.add('menu-expanded');
+          document.body.classList.remove('layout-menu-collapsed');
+        }
+      } else {
+        // Set timeout to hide sidebar after leaving
+        hoverTimeoutRef.current = setTimeout(() => {
+          setSidebarHovered(false);
+          const layoutMenu = document.getElementById('layout-menu');
+          if (layoutMenu) {
+            layoutMenu.classList.remove('menu-hover');
+            layoutMenu.classList.remove('menu-expanded');
+            document.body.classList.add('layout-menu-collapsed');
+          }
+        }, 300); // 300ms delay before collapsing
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  useEffect(() => {
+    // Initialize Vuexy scripts after component mounts
+    const initializeVuexy = () => {
+      // Menu initialization
+      if (window.Menu) {
+        const layoutMenuEl = document.querySelectorAll('#layout-menu');
+        layoutMenuEl.forEach(menu => {
+          new window.Menu(menu, {
+            orientation: 'vertical',
+            closeChildren: false
+          });
+        });
+      }
+
+      // Perfect Scrollbar
+      if (window.PerfectScrollbar) {
+        const menuInner = document.querySelectorAll('.menu-inner');
+        menuInner.forEach(element => {
+          new window.PerfectScrollbar(element, {
+            suppressScrollX: true,
+            wheelPropagation: false
+          });
+        });
+      }
+
+      // Tooltips initialization
+      if (window.bootstrap && window.bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new window.bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    setTimeout(initializeVuexy, 100);
+
+    // Cleanup timeouts on unmount
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      document.body.classList.remove('layout-menu-collapsed');
+    };
+  }, []);
+
+  return (
+    <div className="layout-wrapper layout-content-navbar">
+      <div className="layout-container">
+        {/* Sidebar - pass both collapsed state AND toggle function */}
+        <Sidebar 
+          collapsed={sidebarCollapsed}
+          hovered={sidebarHovered}
+          toggleSidebar={toggleSidebar}
+          onMouseEnter={() => handleSidebarHover(true)}
+          onMouseLeave={() => handleSidebarHover(false)}
+        />
+
+        {/* Mobile Menu Toggler */}
+        <div className="menu-mobile-toggler d-xl-none rounded-1">
+          <a
+            href="#"
+            className="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleSidebar();
+            }}>
+            <i className="ti tabler-menu icon-base"></i>
+            <i className="ti tabler-chevron-right icon-base"></i>
+          </a>
+        </div>
+
+        {/* Layout Page */}
         <div className="layout-page">
-          <Navbar toggleSidebar={toggleSidebar} />
-          
+          {/* Navbar */}
+          <Navbar 
+            toggleSidebar={toggleSidebar} 
+            user={user} 
+            onLogout={handleLogout} 
+          />
+
+          {/* Content wrapper */}
           <div className="content-wrapper">
+            {/* Content */}
             <div className="container-xxl flex-grow-1 container-p-y">
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
                 <Route path="/home" element={<Home />} />
+                {/* Add more routes as needed */}
               </Routes>
             </div>
-            
+            {/* / Content */}
+
+            {/* Footer */}
             <footer className="content-footer footer bg-footer-theme">
               <div className="container-xxl">
                 <div className="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
                   <div className="text-body">
-                    &#169;
-                    <script>
-                      document.write(new Date().getFullYear());
-                    </script>
-                    {new Date().getFullYear()}, made with ❤️ by <a href="https://pixinvent.com" target="_blank" rel="noopener noreferrer" className="footer-link">Pixinvent</a>
-                  </div>
-                  <div className="d-none d-lg-inline-block">
-                    <a href="https://themeforest.net/licenses/standard" className="footer-link me-4" target="_blank" rel="noopener noreferrer">License</a>
-                    <a href="https://themeforest.net/user/pixinvent/portfolio" target="_blank" rel="noopener noreferrer" className="footer-link me-4">More Themes</a>
-                    <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/" target="_blank" rel="noopener noreferrer" className="footer-link me-4">Documentation</a>
-                    <a href="https://pixinvent.ticksy.com/" target="_blank" rel="noopener noreferrer" className="footer-link d-none d-sm-inline-block">Support</a>
+                    © {new Date().getFullYear()}, made  by{' '}
+                    <a
+                      href="#"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footer-link">
+                      Arkya Santra
+                    </a>
                   </div>
                 </div>
               </div>
             </footer>
-            
+            {/* / Footer */}
+
             <div className="content-backdrop fade"></div>
           </div>
+          {/* Content wrapper */}
         </div>
-        
-        <div className="layout-overlay layout-menu-toggle"></div>
-        <div className="drag-target"></div>
+        {/* / Layout page */}
       </div>
+
+      {/* Overlay */}
+      <div className="layout-overlay layout-menu-toggle" onClick={toggleSidebar}></div>
+
+      {/* Drag Target Area To SlideIn Menu On Small Screens */}
+      <div className="drag-target"></div>
     </div>
   );
 };

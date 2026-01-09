@@ -50,6 +50,15 @@ def login_view(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
+    # Try to find user by email if username looks like an email
+    user_obj = None
+    if '@' in username:
+        try:
+            user_obj = User.objects.get(email=username)
+            username = user_obj.username  # Use actual username for authentication
+        except User.DoesNotExist:
+            pass
+    
     # Authenticate using custom backend
     user = authenticate(request, username=username, password=password)
     
@@ -73,6 +82,11 @@ def login_view(request):
             }
         }, status=status.HTTP_200_OK)
     else:
+        # Log failed attempt for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed login attempt for username/email: {request.data.get('username')}")
+        
         return Response(
             {'error': 'Invalid credentials'},
             status=status.HTTP_401_UNAUTHORIZED
@@ -110,21 +124,27 @@ def user_profile(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])  # Changed to AllowAny
 def check_auth(request):
     """Check if user is authenticated"""
-    roles = get_user_roles(request.user)
-    primary_role = get_user_primary_role(request.user)
-    
-    return Response({
-        'isAuthenticated': True,
-        'user': {
-            'id': request.user.id,
-            'username': request.user.username,
-            'email': request.user.email,
-            'role': primary_role,
-            'roles': roles,
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
-        }
-    }, status=status.HTTP_200_OK)
+    if request.user.is_authenticated:
+        roles = get_user_roles(request.user)
+        primary_role = get_user_primary_role(request.user)
+        
+        return Response({
+            'isAuthenticated': True,
+            'user': {
+                'id': request.user.id,
+                'username': request.user.username,
+                'email': request.user.email,
+                'role': primary_role,
+                'roles': roles,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+            }
+        }, status=status.HTTP_200_OK)
+    else:
+        return Response({
+            'isAuthenticated': False,
+            'user': None
+        }, status=status.HTTP_200_OK)
