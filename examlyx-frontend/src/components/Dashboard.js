@@ -15,13 +15,17 @@ const Dashboard = () => {
   const toggleSidebar = () => {
     const newCollapsedState = !sidebarCollapsed;
     setSidebarCollapsed(newCollapsedState);
-    setSidebarHovered(false); // Reset hover state when manually toggled
+    setSidebarHovered(false);
     
-    // Toggle body class for collapsed state
+    // Get the HTML element to add/remove classes
+    const htmlElement = document.documentElement;
+    
     if (newCollapsedState) {
-      document.body.classList.add('layout-menu-collapsed');
+      htmlElement.classList.add('layout-menu-collapsed');
+      htmlElement.classList.remove('layout-menu-expanded');
     } else {
-      document.body.classList.remove('layout-menu-collapsed');
+      htmlElement.classList.remove('layout-menu-collapsed');
+      htmlElement.classList.add('layout-menu-expanded');
     }
     
     // Also toggle class on layout-menu element
@@ -40,30 +44,31 @@ const Dashboard = () => {
   const handleSidebarHover = (isHovering) => {
     if (sidebarCollapsed) {
       if (isHovering) {
-        // Clear any existing timeout
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
         }
         
-        // Show sidebar on hover
         setSidebarHovered(true);
         const layoutMenu = document.getElementById('layout-menu');
+        const htmlElement = document.documentElement;
+        
         if (layoutMenu) {
           layoutMenu.classList.add('menu-hover');
           layoutMenu.classList.add('menu-expanded');
-          document.body.classList.remove('layout-menu-collapsed');
         }
+        htmlElement.classList.remove('layout-menu-collapsed');
       } else {
-        // Set timeout to hide sidebar after leaving
         hoverTimeoutRef.current = setTimeout(() => {
           setSidebarHovered(false);
           const layoutMenu = document.getElementById('layout-menu');
+          const htmlElement = document.documentElement;
+          
           if (layoutMenu) {
             layoutMenu.classList.remove('menu-hover');
             layoutMenu.classList.remove('menu-expanded');
-            document.body.classList.add('layout-menu-collapsed');
           }
-        }, 300); // 300ms delay before collapsing
+          htmlElement.classList.add('layout-menu-collapsed');
+        }, 300);
       }
     }
   };
@@ -108,22 +113,20 @@ const Dashboard = () => {
       }
     };
 
-    // Small delay to ensure DOM is ready
     setTimeout(initializeVuexy, 100);
 
-    // Cleanup timeouts on unmount
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
-      document.body.classList.remove('layout-menu-collapsed');
+      document.documentElement.classList.remove('layout-menu-collapsed');
     };
   }, []);
 
   return (
     <div className="layout-wrapper layout-content-navbar">
       <div className="layout-container">
-        {/* Sidebar - pass both collapsed state AND toggle function */}
+        {/* Sidebar */}
         <Sidebar 
           collapsed={sidebarCollapsed}
           hovered={sidebarHovered}
@@ -162,7 +165,6 @@ const Dashboard = () => {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
                 <Route path="/home" element={<Home />} />
-                {/* Add more routes as needed */}
               </Routes>
             </div>
             {/* / Content */}
@@ -172,7 +174,7 @@ const Dashboard = () => {
               <div className="container-xxl">
                 <div className="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
                   <div className="text-body">
-                    © {new Date().getFullYear()}, made  by{' '}
+                    © {new Date().getFullYear()}, made by{' '}
                     <a
                       href="#"
                       target="_blank"
