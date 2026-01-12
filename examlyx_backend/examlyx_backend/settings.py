@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
+    'Course_Program_Batch',
 ]
 
 MIDDLEWARE = [

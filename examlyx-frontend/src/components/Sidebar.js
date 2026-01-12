@@ -25,17 +25,24 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
 
   const isActive = (path) => {
     return location.pathname === path || 
-           location.pathname.startsWith(`${path}/`) ||
-           (path === '/dashboard' && location.pathname === '/dashboard/');
+           location.pathname.startsWith(`${path}/`);
   };
 
+  // FIXED: Dashboard should only be active on the exact dashboard home page
   const isDashboardActive = () => {
+    // Only active when on exactly '/dashboard' or '/dashboard/home'
+    // Not active on '/dashboard/users/*' or other subpaths
     return location.pathname === '/dashboard' || 
-           location.pathname.startsWith('/dashboard/');
+           location.pathname === '/dashboard/home' ||
+           location.pathname === '/dashboard/' ||
+           (location.pathname === '/dashboard' && location.pathname.endsWith('/'));
   };
 
+  // FIXED: Users should be active on any users subpath
   const isUsersActive = () => {
-    return location.pathname.includes('/users');
+    return location.pathname.includes('/users') ||
+           location.pathname.includes('/teachers') ||
+           location.pathname.includes('/students');
   };
 
   return (
@@ -48,7 +55,7 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
       onMouseLeave={onMouseLeave}
     >
       <div className="app-brand demo">
-        <Link to="/dashboard" className="app-brand-link">
+        <Link to="/dashboard/home" className="app-brand-link">
           <span className="app-brand-logo demo">
             <span className="text-primary">
               <span className="app-brand-logo demo">
@@ -82,7 +89,7 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
         {/* Dashboard menu item */}
         <li className={`menu-item ${isDashboardActive() ? 'active' : ''}`}>
           <Link 
-            to="/dashboard" 
+            to="/dashboard/home"  // Changed to home page
             className="menu-link"
           >
             <i className="menu-icon icon-base ti tabler-smart-home"></i>
@@ -117,31 +124,6 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
         </li>
         
         {/* Add more menu items as needed */}
-        {/* Example of a menu with sub-items */}
-        {/* <li className={`menu-item ${openMenus.apps ? 'open' : ''}`}>
-          <a
-            href="#"
-            className="menu-link menu-toggle"
-            onClick={(e) => {
-              e.preventDefault();
-              toggleMenu('apps');
-            }}>
-            <i className="menu-icon icon-base ti tabler-apps"></i>
-            <div data-i18n="Applications" className="menu-title">Applications</div>
-          </a>
-          <ul className="menu-sub">
-            <li className="menu-item">
-              <Link to="/dashboard/email" className="menu-link">
-                <div data-i18n="Email">Email</div>
-              </Link>
-            </li>
-            <li className="menu-item">
-              <Link to="/dashboard/chat" className="menu-link">
-                <div data-i18n="Chat">Chat</div>
-              </Link>
-            </li>
-          </ul>
-        </li> */}
       </ul>
     </aside>
   );

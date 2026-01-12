@@ -4,6 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import Home from './pages/Home';
+// Users
+import Teachers from '../users/Teachers';
+import Teachers_Create from '../users/Teachers_Create';
+import Student from '../users/Student';
+import Student_Create from '../users/Student_Create';
+
+import { loadCSRFToken } from '../services/csrf';
+
 
 const Dashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -80,6 +88,7 @@ const Dashboard = () => {
   useEffect(() => {
     // Initialize Vuexy scripts after component mounts
     const initializeVuexy = () => {
+      loadCSRFToken();
       // Menu initialization
       if (window.Menu) {
         const layoutMenuEl = document.querySelectorAll('#layout-menu');
@@ -163,8 +172,19 @@ const Dashboard = () => {
             {/* Content */}
             <div className="container-xxl flex-grow-1 container-p-y">
               <Routes>
+                {/* Default */}
                 <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
+
+                {/* Dashboard */}
                 <Route path="/home" element={<Home />} />
+
+                {/* Teachers */}
+                <Route path="/users/teachers" element={<Teachers />} />
+                <Route path="/users/teachers/create" element={<Teachers_Create />} />
+
+                {/* Students */}
+                <Route path="/users/students" element={<Student />} />
+                <Route path="/users/students/create" element={<Student_Create />} />
               </Routes>
             </div>
             {/* / Content */}

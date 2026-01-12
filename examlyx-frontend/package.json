@@ -9,11 +9,14 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
+    "js-cookie": "^3.0.5",
+    "js-cookies": "^1.0.4",
     "react": "^19.2.3",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.3",
     "react-router-dom": "^6.30.2",
     "react-scripts": "5.0.1",
+    "sweetalert2": "^11.26.17",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

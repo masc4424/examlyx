@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-
+from django.utils import timezone
 
 class Role(models.Model):
     """
@@ -156,3 +156,91 @@ def get_user_permissions(user):
     ).distinct()
     
     return permissions
+
+class Client(models.Model):
+    """
+    Client organization
+    """
+    name = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'clients'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class UserClient(models.Model):
+    """
+    Link user to client(s)
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_clients')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_users')
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_clients')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'user_clients'
+        unique_together = ('user', 'client')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.client.name}"
+
+
+class UserDeleted(models.Model):
+    """
+    Soft deleted users for auditing
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='deleted_record')
+    deleted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='deleted_users')
+    deleted_at = models.DateTimeField(auto_now_add=True)
+    reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'user_deleted'
+
+    def __str__(self):
+        return f"Deleted User: {self.user.username}"
+
+
+class ClientDeleted(models.Model):
+    """
+    Soft deleted clients
+    """
+    client = models.OneToOneField(Client, on_delete=models.CASCADE, related_name='deleted_record')
+    deleted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='deleted_clients')
+    deleted_at = models.DateTimeField(auto_now_add=True)
+    reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'client_deleted'
+
+    def __str__(self):
+        return f"Deleted Client: {self.client.name}"
+
+
+class ClientSettings(models.Model):
+    """
+    Settings for clients
+    """
+    client = models.OneToOneField(Client, on_delete=models.CASCADE, related_name='settings')
+    is_user_course = models.BooleanField(default=False)
+    is_course_program_flow = models.BooleanField(default=False)
+    is_course_batch_flow = models.BooleanField(default=False)
+    is_s3_enabled = models.BooleanField(default=False)
+    s3_bucket_link = models.URLField(blank=True, null=True)
+    s3_bucket_name = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'client_settings'
+
+    def __str__(self):
+        return f"Settings for {self.client.name}"
