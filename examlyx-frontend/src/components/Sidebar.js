@@ -11,6 +11,9 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
     if (path.includes('/dashboard')) {
       setOpenMenus(prev => ({ ...prev, dashboards: true }));
     }
+    if (path.includes('/users')) {
+      setOpenMenus(prev => ({ ...prev, users: true }));
+    }
   }, [location]);
 
   const toggleMenu = (menuKey) => {
@@ -29,6 +32,10 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
   const isDashboardActive = () => {
     return location.pathname === '/dashboard' || 
            location.pathname.startsWith('/dashboard/');
+  };
+
+  const isUsersActive = () => {
+    return location.pathname.includes('/users');
   };
 
   return (
@@ -81,6 +88,32 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
             <i className="menu-icon icon-base ti tabler-smart-home"></i>
             <div data-i18n="Dashboard" className="menu-title">Dashboard</div>
           </Link>
+        </li>
+
+        {/* Users menu with sub-items */}
+        <li className={`menu-item ${openMenus.users ? 'open' : ''} ${isUsersActive() ? 'active' : ''}`}>
+          <a
+            href="#"
+            className="menu-link menu-toggle"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleMenu('users');
+            }}>
+            <i className="menu-icon icon-base ti tabler-users"></i>
+            <div data-i18n="Users" className="menu-title">Users</div>
+          </a>
+          <ul className="menu-sub">
+            <li className={`menu-item ${isActive('/dashboard/users/teachers') ? 'active' : ''}`}>
+              <Link to="/dashboard/users/teachers" className="menu-link">
+                <div data-i18n="Teachers">Teachers</div>
+              </Link>
+            </li>
+            <li className={`menu-item ${isActive('/dashboard/users/students') ? 'active' : ''}`}>
+              <Link to="/dashboard/users/students" className="menu-link">
+                <div data-i18n="Students">Students</div>
+              </Link>
+            </li>
+          </ul>
         </li>
         
         {/* Add more menu items as needed */}
