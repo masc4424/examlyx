@@ -26,9 +26,9 @@ class ProgramAdmin(admin.ModelAdmin):
 
 @admin.register(Batch)
 class BatchAdmin(admin.ModelAdmin):
-    list_display = ('name', 'program', 'start_date', 'end_date', 'is_active')
-    list_filter = ('program', 'is_active', 'start_date', 'end_date')
-    search_fields = ('name', 'program__name')
+    list_display = ('name', 'client', 'start_date', 'end_date', 'is_active')
+    list_filter = ('client', 'is_active', 'start_date', 'end_date')
+    search_fields = ('name', 'client__name')
     readonly_fields = ('created_at', 'updated_at')
 
 

@@ -36,19 +36,25 @@ class Program(models.Model):
 
 class Batch(models.Model):
     name = models.CharField(max_length=255)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='batches')
     start_date = models.DateField()
     end_date = models.DateField()
+    client = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name='batches',
+        null=True,
+        blank=True
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'batches'
-        unique_together = ('name', 'program')
+        unique_together = ('name', 'client')
 
     def __str__(self):
-        return f"{self.name} ({self.program.name})"
+        return self.name
 
 
 class UserCourse(models.Model):

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+# from Course_Program_Batch.models import *
+# from accounts.models import *
 
 class Role(models.Model):
     """
@@ -10,6 +12,7 @@ class Role(models.Model):
     display_name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False, help_text="admin role with all permissions")
     is_superadmin = models.BooleanField(default=False, help_text="Super admin role with all permissions")
     is_student_specific = models.BooleanField(default=False, help_text="Role specific to students")
     is_teacher_specific = models.BooleanField(default=False, help_text="Role specific to teachers")
@@ -157,6 +160,7 @@ def get_user_permissions(user):
     
     return permissions
 
+
 class Client(models.Model):
     """
     Client organization
@@ -165,7 +169,12 @@ class Client(models.Model):
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
+    student_count = models.PositiveIntegerField(default=0, help_text="Total number of students for this client")
+    teacher_count = models.PositiveIntegerField(default=0, help_text="Total number of teachers for this client")
+    subscription_start_date = models.DateField(blank=True, null=True)
+    subscription_end_date = models.DateField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -238,9 +247,129 @@ class ClientSettings(models.Model):
     is_s3_enabled = models.BooleanField(default=False)
     s3_bucket_link = models.URLField(blank=True, null=True)
     s3_bucket_name = models.CharField(max_length=255, blank=True, null=True)
+    is_subscription_base_client = models.BooleanField(default=False, help_text="Indicates if client is subscription based")
+    is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'client_settings'
 
     def __str__(self):
         return f"Settings for {self.client.name}"
+
+class Country(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=150)
+    sortname = models.CharField(max_length=3)
+    phonecode = models.IntegerField()
+
+    class Meta:
+        db_table = 'countries'
+        managed = False  # Important! Django won't try to create/alter this table
+
+    def __str__(self):
+        return self.name
+
+
+class State(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=30)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, db_column='country_id', related_name='states')
+
+    class Meta:
+        db_table = 'states'
+        managed = False
+
+    def __str__(self):
+        return self.name
+
+
+class City(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=30)
+    state = models.ForeignKey(State, on_delete=models.CASCADE, db_column='state_id', related_name='cities')
+
+    class Meta:
+        db_table = 'cities'
+        managed = False
+
+    def __str__(self):
+        return self.name
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+
+    client = models.ForeignKey(
+        'accounts.Client',
+        on_delete=models.CASCADE,
+        related_name='user_profiles'
+    )
+
+    role = models.ForeignKey(
+        'accounts.Role',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_profiles'
+    )
+
+    course = models.ForeignKey(
+        'Course_Program_Batch.Course',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_profiles'
+    )
+
+    batch = models.ForeignKey(
+        'Course_Program_Batch.Batch',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_profiles'
+    )
+
+    # 🔹 NEW FIELDS
+    address = models.TextField(blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+
+    country = models.ForeignKey(
+        'accounts.Country',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_profiles'
+    )
+
+    state = models.ForeignKey(
+        'accounts.State',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_profiles'
+    )
+
+    city = models.ForeignKey(
+        'accounts.City',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_profiles'
+    )
+
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_profiles'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} Profile"

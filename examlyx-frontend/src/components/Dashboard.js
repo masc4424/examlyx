@@ -9,6 +9,15 @@ import Teachers from '../users/Teachers';
 import Teachers_Create from '../users/Teachers_Create';
 import Student from '../users/Student';
 import Student_Create from '../users/Student_Create';
+import Admin from '../users/Admin';
+import Admin_Create from '../users/Admin_Create';
+
+// Clients
+import Client from '../users/Client';
+import Client_Create from '../users/Client_Create';
+
+// User Profile View
+import User_Profile_View from '../users/User_profile_View';
 
 import { loadCSRFToken } from '../services/csrf';
 
@@ -178,6 +187,10 @@ const Dashboard = () => {
                 {/* Dashboard */}
                 <Route path="/home" element={<Home />} />
 
+                {/* Clients */}
+                <Route path="/users/client" element={<Client />} />
+                <Route path="/users/client/create" element={<Client_Create />} />
+
                 {/* Teachers */}
                 <Route path="/users/teachers" element={<Teachers />} />
                 <Route path="/users/teachers/create" element={<Teachers_Create />} />
@@ -185,6 +198,13 @@ const Dashboard = () => {
                 {/* Students */}
                 <Route path="/users/students" element={<Student />} />
                 <Route path="/users/students/create" element={<Student_Create />} />
+
+                {/* Admin */}
+                <Route path="/users/admin" element={<Admin />} />
+                <Route path="/users/admin/create" element={<Admin_Create />} />
+
+                {/* User Profile View */}
+                <Route path="/users/user_profile_view/:userId" element={<User_Profile_View />}/>
               </Routes>
             </div>
             {/* / Content */}

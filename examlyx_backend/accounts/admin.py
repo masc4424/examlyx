@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     Role, RoleUser, Permission, RolePermission,
-    Client, UserClient, UserDeleted, ClientDeleted, ClientSettings,
+    Client, UserClient, UserDeleted, ClientDeleted, ClientSettings, UserProfile,
     get_user_permissions
 )
 
@@ -22,7 +22,7 @@ class RolePermissionInline(admin.TabularInline):
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'display_name', 'is_superadmin', 'is_student_specific',
+    list_display = ('name', 'display_name', 'is_admin', 'is_superadmin', 'is_student_specific',
                     'is_teacher_specific', 'is_active', 'created_at')
     list_filter = ('is_active', 'is_superadmin', 'is_student_specific', 'is_teacher_specific', 'created_at')
     search_fields = ('name', 'display_name', 'description')
@@ -31,7 +31,7 @@ class RoleAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Role Information', {'fields': ('name', 'display_name', 'description')}),
-        ('Role Types', {'fields': ('is_superadmin', 'is_student_specific', 'is_teacher_specific')}),
+        ('Role Types', {'fields': ('is_admin', 'is_superadmin', 'is_student_specific', 'is_teacher_specific')}),
         ('Status', {'fields': ('is_active',)}),
         ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )
@@ -131,7 +131,10 @@ admin.site.register(User, CustomUserAdmin)
 # ----------------------------
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone_number', 'is_active', 'created_at')
+    list_display = (
+        'name', 'email', 'phone_number', 'student_count', 'teacher_count',
+        'subscription_start_date', 'subscription_end_date', 'is_active', 'created_at'
+    )
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'email', 'phone_number')
     readonly_fields = ('created_at', 'updated_at')
@@ -169,8 +172,57 @@ class ClientDeletedAdmin(admin.ModelAdmin):
 
 @admin.register(ClientSettings)
 class ClientSettingsAdmin(admin.ModelAdmin):
-    list_display = ('client', 'is_user_course', 'is_course_program_flow',
-                    'is_course_batch_flow', 'is_s3_enabled', 's3_bucket_name')
-    list_filter = ('is_user_course', 'is_course_program_flow', 'is_course_batch_flow', 'is_s3_enabled')
+    list_display = (
+        'client', 'is_user_course', 'is_course_program_flow',
+        'is_course_batch_flow', 'is_s3_enabled', 'is_subscription_base_client', 's3_bucket_name'
+    )
+    list_filter = ('is_user_course', 'is_course_program_flow', 'is_course_batch_flow',
+                   'is_s3_enabled', 'is_subscription_base_client')
     search_fields = ('client__name',)
     readonly_fields = ()
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'client', 'role', 'course', 'batch',
+        'phone_number', 'date_of_birth', 'address',
+        'country', 'state', 'city',
+        'is_active', 'created_at'
+    )
+
+    list_filter = (
+        'is_active', 'client', 'role', 'course', 'batch',
+        'created_at', 'country', 'state', 'city'
+    )
+
+    search_fields = (
+        'user__username', 'user__email',
+        'user__first_name', 'user__last_name',
+        'client__name', 'role__name',
+        'course__name', 'batch__name',
+        'phone_number', 'address',
+        'country__name', 'state__name', 'city__name'
+    )
+
+    autocomplete_fields = ['user', 'client', 'role', 'course', 'batch']
+    readonly_fields = ('created_at', 'updated_at')
+
+    fieldsets = (
+        ('User Information', {'fields': ('user', 'client', 'role')}),
+        ('Course & Batch', {'fields': ('course', 'batch')}),
+        ('Contact', {
+            'fields': (
+                'phone_number',
+                'address',
+                'date_of_birth',
+                'country',
+                'state',
+                'city'
+            )
+        }),
+        ('Status', {'fields': ('is_active', 'is_delete')}),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

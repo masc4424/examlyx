@@ -97,6 +97,14 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
           </Link>
         </li>
 
+        {/* Clients menu item */}
+        <li className={`menu-item ${isActive('/dashboard/users/client') ? 'active' : ''}`}>
+          <Link to="/dashboard/users/client" className="menu-link">
+            <i className="menu-icon icon-base ti tabler-building"></i>
+            <div data-i18n="Clients" className="menu-title">Clients</div>
+          </Link>
+        </li>
+
         {/* Users menu with sub-items */}
         <li className={`menu-item ${openMenus.users ? 'open' : ''} ${isUsersActive() ? 'active' : ''}`}>
           <a
@@ -118,6 +126,11 @@ const Sidebar = ({ collapsed, hovered, toggleSidebar, onMouseEnter, onMouseLeave
             <li className={`menu-item ${isActive('/dashboard/users/students') ? 'active' : ''}`}>
               <Link to="/dashboard/users/students" className="menu-link">
                 <div data-i18n="Students">Students</div>
+              </Link>
+            </li>
+            <li className={`menu-item ${isActive('/dashboard/users/admin') ? 'active' : ''}`}>
+              <Link to="/dashboard/users/admin" className="menu-link">
+                <div data-i18n="Admins">Admins</div>
               </Link>
             </li>
           </ul>

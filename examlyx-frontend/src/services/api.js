@@ -59,10 +59,62 @@ export const studentAPI = {
   deleteStudent: (id) => api.delete(`/api/accounts/users/${id}/delete/`),
 };
 
-export const userAPI = {
-  getUsers: () => api.get('/api/users/'),
-  getUser: (id) => api.get(`/api/users/${id}/`),
-  getRoles: () => api.get('/api/roles/'),
+export const adminAPI = {
+  getAdmins: () => api.get('/api/accounts/admins/list/'),
+  getAdmin: (id) => api.get(`/api/accounts/admins/${id}/`),
+  createAdmin: (data) => api.post('/api/accounts/admins/create/', data),
+  updateAdmin: (id, data) => api.put(`/api/accounts/admins/${id}/`, data),
+  deleteAdmin: (id) => api.delete(`/api/accounts/users/${id}/delete/`),
 };
+
+export const userAPI = {
+  getUsers: () => api.get('/api/accounts/users/'),
+  getUser: (id) => api.get(`/api/accounts/users/${id}/`),
+  getRoles: () => api.get('/api/accounts/roles/'),
+};
+
+// Client APIs
+export const clientAPI = {
+  getClients: () => api.get('/api/accounts/clients/'),
+  getClientSettings: (clientId) =>
+    api.get(`/api/accounts/clients/${clientId}/settings/`),
+
+  createClient: (data) => api.post('/api/accounts/clients/create/', data),
+  deleteClient: (id) => api.delete(`/api/accounts/clients/${id}/delete/`),
+};
+
+/* ---------------- PROGRAM API ---------------- */
+
+export const programAPI = {
+  getPrograms: (clientId) =>
+    api.get(`/api/course_program_batch/clients/${clientId}/programs/`),
+};
+
+/* ---------------- BATCH API ---------------- */
+
+export const batchAPI = {
+  getBatches: (clientId) =>
+    api.get(`/api/course_program_batch/clients/${clientId}/batches/`),
+};
+
+export const batchCourseAPI = {
+  getCoursesByBatch: (batchId) =>
+    api.get(`/api/course_program_batch/batches/${batchId}/courses/`),
+}
+
+export const programCourseAPI = {
+  getCoursesByProgram: (programId) =>
+    api.get(`/api/course_program_batch/programs/${programId}/courses/`),
+}
+
+/* ---------------- LOCATION API ---------------- */
+
+export const locationAPI = {
+  getCountries: () => api.get('/api/accounts/countries/'),
+  getStates: (countryId) => api.get(`/api/accounts/states/${countryId}/`),
+  getCities: (stateId) => api.get(`/api/accounts/cities/${stateId}/`),
+};
+
+
 
 export default api;
