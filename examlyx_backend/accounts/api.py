@@ -211,10 +211,10 @@ def create_user_and_profile(request, user_type='student'):
     password = data.get('password')
     phone_number = data.get('phone_number')
     address = data.get('address')
-    dob = data.get('dob')  # Expecting 'YYYY-MM-DD'
-    country = data.get('country')
-    state = data.get('state')
-    city = data.get('city')
+    date_of_birth = data.get('dob')  # Expecting 'YYYY-MM-DD'
+    country_id = data.get('country')
+    state_id = data.get('state')
+    city_id = data.get('city')
     course_id = data.get('course')
     program_id = data.get('program')
     batch_id = data.get('batch')
@@ -236,6 +236,29 @@ def create_user_and_profile(request, user_type='student'):
     password_regex = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$')
     if not password_regex.match(password):
         return Response({'password': 'Weak password'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # ---------- FETCH FOREIGN KEY INSTANCES ----------
+    country_instance = None
+    state_instance = None
+    city_instance = None
+    
+    if country_id:
+        try:
+            country_instance = Country.objects.get(id=country_id)
+        except Country.DoesNotExist:
+            return Response({'error': 'Invalid country ID'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if state_id:
+        try:
+            state_instance = State.objects.get(id=state_id)
+        except State.DoesNotExist:
+            return Response({'error': 'Invalid state ID'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if city_id:
+        try:
+            city_instance = City.objects.get(id=city_id)
+        except City.DoesNotExist:
+            return Response({'error': 'Invalid city ID'}, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------- USERNAME ----------
     base_username = slugify(f"{first_name}.{last_name}")
@@ -272,10 +295,10 @@ def create_user_and_profile(request, user_type='student'):
         role=role,
         phone_number=phone_number,
         address=address,
-        dob=dob,
-        country=country,
-        state=state,
-        city=city,
+        date_of_birth=date_of_birth,
+        country=country_instance,
+        state=state_instance,
+        city=city_instance,
         is_active=True
     )
 
@@ -290,25 +313,34 @@ def create_user_and_profile(request, user_type='student'):
     if settings:
         # UserCourse mapping
         if settings.is_user_course and course_id:
-            course = Course.objects.get(id=course_id)
-            profile.course = course
-            profile.save()
-            UserCourse.objects.create(user=user, course=course)
-            mapped_flows.append('course')
+            try:
+                course = Course.objects.get(id=course_id)
+                profile.course = course
+                profile.save()
+                UserCourse.objects.create(user=user, course=course)
+                mapped_flows.append('course')
+            except Course.DoesNotExist:
+                return Response({'error': 'Invalid course ID'}, status=status.HTTP_400_BAD_REQUEST)
 
         # UserProgram mapping
         if settings.is_course_program_flow and program_id:
-            program = Program.objects.get(id=program_id)
-            UserProgram.objects.create(user=user, program=program)
-            mapped_flows.append('program')
+            try:
+                program = Program.objects.get(id=program_id)
+                UserProgram.objects.create(user=user, program=program)
+                mapped_flows.append('program')
+            except Program.DoesNotExist:
+                return Response({'error': 'Invalid program ID'}, status=status.HTTP_400_BAD_REQUEST)
 
         # UserBatch mapping
         if settings.is_course_batch_flow and batch_id:
-            batch = Batch.objects.get(id=batch_id)
-            profile.batch = batch
-            profile.save()
-            UserBatch.objects.create(user=user, batch=batch)
-            mapped_flows.append('batch')
+            try:
+                batch = Batch.objects.get(id=batch_id)
+                profile.batch = batch
+                profile.save()
+                UserBatch.objects.create(user=user, batch=batch)
+                mapped_flows.append('batch')
+            except Batch.DoesNotExist:
+                return Response({'error': 'Invalid batch ID'}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({
         'message': f'{user_type.capitalize()} created successfully',
